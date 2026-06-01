@@ -1053,7 +1053,10 @@ function startSingleLang(lang) {
     inputWrap.classList.remove('recording');
     voiceStatus.classList.remove('show');
     inputEl.placeholder = 'Message your assistant…';
-    if (final.trim() && autoSend && apiKey) setTimeout(() => send(), 200);
+    if (final.trim()) {
+      if (checkVoiceCommand(final)) return; // language switch command
+      if (autoSend && apiKey) setTimeout(() => send(), 200);
+    }
   };
   recognition.onerror = e => {
     isRecording = false;
@@ -1188,6 +1191,62 @@ function addBubble(role, text, loading=false) {
 }
 
 // ── Send ───────────────────────────────────────────────────────────────────
+
+// ── Voice command detection ────────────────────────────────────────────────
+const VOICE_COMMANDS = {
+  // Switch to English
+  'en-US': [
+    'switch to english', 'change to english', 'speak english',
+    'english please', 'in english', 'english mode',
+    'speak to me in english', 'change language to english'
+  ],
+  // Switch to Hebrew
+  'he-IL': [
+    'switch to hebrew', 'change to hebrew', 'speak hebrew',
+    'hebrew please', 'in hebrew', 'hebrew mode',
+    'עברית', 'עבור לעברית', 'דבר עברית', 'שנה לעברית',
+    'דבר אליי בעברית', 'עברית בבקשה', 'החלף לעברית'
+  ],
+  // Switch to Russian
+  'ru-RU': [
+    'switch to russian', 'change to russian', 'speak russian',
+    'russian please', 'in russian', 'russian mode',
+    'переключись на русский', 'говори по русски', 'говори по-русски',
+    'на русском', 'русский язык', 'смени язык на русский',
+    'переключи на русский', 'по русски пожалуйста'
+  ]
+};
+
+function checkVoiceCommand(text) {
+  const lower = text.toLowerCase().trim();
+  for (const [lang, commands] of Object.entries(VOICE_COMMANDS)) {
+    for (const cmd of commands) {
+      if (lower.includes(cmd)) {
+        switchLanguage(lang);
+        return true; // command matched, don't send to Gemini
+      }
+    }
+  }
+  return false; // not a command, send to Gemini normally
+}
+
+function switchLanguage(lang) {
+  micLang = lang;
+  localStorage.setItem('mic_lang', lang);
+  syncLangSelectors();
+
+  const names = { 'en-US': 'English 🇺🇸', 'he-IL': 'Hebrew 🇮🇱', 'ru-RU': 'Russian 🇷🇺' };
+  const name = names[lang] || lang;
+
+  // Clear input and show confirmation bubble
+  inputEl.value = '';
+  inputEl.dispatchEvent(new Event('input'));
+  addBubble('ai', `Switched to ${name}! You can now speak in ${name.split(' ')[0]}.`);
+
+  // Also update TTS voice to match
+  loadVoices();
+}
+
 async function send() {
   const text = inputEl.value.trim();
   if (!text || !apiKey) return;
