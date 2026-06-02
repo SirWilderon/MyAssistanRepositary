@@ -63,6 +63,7 @@
     gap: 10px;
     background: var(--surface);
   }
+  #topbar + div { flex-shrink: 0; }
 
   .brand-icon {
     width: 30px; height: 30px; border-radius: 9px;
@@ -623,18 +624,16 @@
     </button>
   </div>
 
-  <!-- Combined action bar - single scrollable row -->
-  <div style="flex-shrink:0; display:flex; gap:5px; padding:5px 8px; border-bottom:1px solid var(--border); background:red; overflow-x:auto; -webkit-overflow-scrolling:touch;">
-    <button ontouchstart="event.preventDefault();openGooglePanel('calendar');" onclick="openGooglePanel('calendar')" style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;">
-      📅 Calendar
-    </button>
-    <button ontouchstart="event.preventDefault();openGooglePanel('tasks');" onclick="openGooglePanel('tasks')" style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;">
-      ✅ Tasks
-    </button>
-    <button ontouchstart="event.preventDefault();injectGoogleContext();" onclick="injectGoogleContext()" style="flex-shrink:0;padding:7px 10px;border-radius:10px;border:1px solid rgba(79,142,247,0.3);background:var(--accent-dim);color:var(--accent);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;">
-      🌅 Briefing
-    </button>
-    <div style="flex-shrink:0;width:1px;background:var(--border2);margin:4px 0;"></div>
+  <!-- Action buttons bar -->
+  <div style="flex-shrink:0;display:flex;gap:5px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+    <button ontouchstart="event.preventDefault();openGooglePanel('calendar');" onclick="openGooglePanel('calendar')" style="flex-shrink:0;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;">📅 Calendar</button>
+    <button ontouchstart="event.preventDefault();openGooglePanel('tasks');" onclick="openGooglePanel('tasks')" style="flex-shrink:0;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;">✅ Tasks</button>
+    <button ontouchstart="event.preventDefault();injectGoogleContext();" onclick="injectGoogleContext()" style="flex-shrink:0;padding:6px 10px;border-radius:8px;border:1px solid rgba(79,142,247,0.3);background:var(--accent-dim);color:var(--accent);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;">🌅 Briefing</button>
+    <div style="flex-shrink:0;width:1px;background:var(--border2);margin:2px 0;"></div>
+    <button id="lang-btn-en" ontouchstart="event.preventDefault();switchLanguage('en-US');" onclick="switchLanguage('en-US')" style="flex-shrink:0;padding:6px 12px;border-radius:8px;border:2px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;">🇺🇸 EN</button>
+    <button id="lang-btn-he" ontouchstart="event.preventDefault();switchLanguage('he-IL');" onclick="switchLanguage('he-IL')" style="flex-shrink:0;padding:6px 12px;border-radius:8px;border:2px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;">🇮🇱 HE</button>
+    <button id="lang-btn-ru" ontouchstart="event.preventDefault();switchLanguage('ru-RU');" onclick="switchLanguage('ru-RU')" style="flex-shrink:0;padding:6px 12px;border-radius:8px;border:2px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;">🇷🇺 RU</button>
+  </div>
     <button id="lang-btn-en" ontouchstart="event.preventDefault();switchLanguage('en-US');" onclick="switchLanguage('en-US')" style="flex-shrink:0;padding:7px 14px;border-radius:10px;border:2px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;">🇺🇸 EN</button>
     <button id="lang-btn-he" ontouchstart="event.preventDefault();switchLanguage('he-IL');" onclick="switchLanguage('he-IL')" style="flex-shrink:0;padding:7px 14px;border-radius:10px;border:2px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;">🇮🇱 HE</button>
     <button id="lang-btn-ru" ontouchstart="event.preventDefault();switchLanguage('ru-RU');" onclick="switchLanguage('ru-RU')" style="flex-shrink:0;padding:7px 14px;border-radius:10px;border:2px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;">🇷🇺 RU</button>
