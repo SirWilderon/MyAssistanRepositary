@@ -41,6 +41,8 @@
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     overflow: hidden;
+    width: 100%;
+    height: 100%;
   }
   #main-col {
     display: flex;
@@ -48,6 +50,7 @@
     flex: 1;
     overflow: hidden;
     min-height: 0;
+    width: 100%;
   }
 
   /* ── Top bar ── */
@@ -95,11 +98,11 @@
   /* ── API key banner ── */
   #key-banner {
     flex-shrink: 0;
-    padding: 10px 16px;
+    padding: 8px 10px;
     background: var(--amber-dim);
     border-bottom: 1px solid rgba(245,158,11,0.25);
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
   }
   #key-banner.hidden { display: none; }
@@ -621,7 +624,7 @@
   </div>
 
   <!-- Combined action bar - single scrollable row -->
-  <div style="flex-shrink:0; display:flex; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); background:var(--surface); overflow-x:auto; -webkit-overflow-scrolling:touch;">
+  <div style="flex-shrink:0; display:flex; gap:5px; padding:5px 8px; border-bottom:1px solid var(--border); background:red; overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <button ontouchstart="event.preventDefault();openGooglePanel('calendar');" onclick="openGooglePanel('calendar')" style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;">
       📅 Calendar
     </button>
