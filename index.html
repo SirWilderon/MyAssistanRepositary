@@ -551,6 +551,57 @@
   }
   .g-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(79,142,247,0.3); }
 
+
+  /* ── Microsoft To Do panel ── */
+  #todo-panel {
+    display: none; position: fixed; inset: 0; z-index: 150;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(3px);
+    align-items: flex-end; justify-content: center;
+  }
+  #todo-panel.open { display: flex; }
+  #todo-sheet {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 24px 24px 0 0; padding: 0 20px 36px;
+    width: 100%; max-width: 520px; max-height: 85dvh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .todo-task-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .todo-task-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--border2); cursor: pointer;
+    flex-shrink: 0; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .todo-task-check.done { background: var(--green); border-color: var(--green); }
+  .todo-task-check.done::after { content: '✓'; color: white; font-size: 11px; }
+  .todo-list-name {
+    font-size: 11px; font-weight: 500; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin: 12px 0 6px; display: flex; align-items: center; gap: 8px;
+  }
+  .todo-list-name::after { content:''; flex:1; height:1px; background:var(--border); }
+  .ms-connect-btn {
+    width: 100%; padding: 13px; border-radius: 12px;
+    border: 1px solid rgba(0,120,212,0.3);
+    background: rgba(0,120,212,0.1); color: #2b88d8;
+    font-family: var(--font); font-size: 15px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 10px; margin-top: 8px;
+  }
+  .ms-connect-btn:hover { background: rgba(0,120,212,0.2); }
+  #todo-status-badge {
+    margin-top: 4px; padding: 4px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 500;
+    background: var(--surface2); color: var(--muted);
+    border: 1px solid var(--border2); display: none;
+  }
+  #todo-status-badge.ok { color: var(--green); background: var(--green-dim); border-color: rgba(52,211,153,0.25); display: inline-flex; gap: 4px; align-items: center; }
+
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -624,6 +675,7 @@
     <button id="lang-btn-en" ontouchstart="event.preventDefault();switchLanguage('en-US');" onclick="switchLanguage('en-US')" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">🇺🇸EN</button>
     <button id="lang-btn-he" ontouchstart="event.preventDefault();switchLanguage('he-IL');" onclick="switchLanguage('he-IL')" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">🇮🇱HE</button>
     <button id="lang-btn-ru" ontouchstart="event.preventDefault();switchLanguage('ru-RU');" onclick="switchLanguage('ru-RU')" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">🇷🇺RU</button>
+    <button ontouchstart="event.preventDefault();openTodoPanel();" onclick="openTodoPanel()" style="padding:5px 8px;border-radius:6px;border:1px solid rgba(0,120,212,0.4);background:rgba(0,120,212,0.1);color:#2b88d8;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">📋TD</button>
     <button id="settings-btn" aria-label="Settings">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </button>
@@ -743,7 +795,8 @@ function getSystem() {
   const langInstruction = micLang === 'auto'
     ? 'Detect the language the user is writing in (English, Hebrew, or Russian) and always reply in that same language.'
     : `Always respond in ${LANG_NAMES[micLang] || 'English'} — the user is speaking ${LANG_NAMES[micLang] || 'English'}.`;
-  return `You are a warm, proactive personal assistant. Help the user manage their schedule, tasks, emails, and daily life. Be concise and conversational — replies may be spoken aloud so avoid markdown symbols like asterisks or bullet dashes; use natural spoken language. IMPORTANT: ${langInstruction} When relevant, suggest actions. Today's date: ${dateStr}.`;
+  const todoConnected = !!localStorage.getItem('ms_access_token');
+  return `You are a warm, proactive personal assistant. Help the user manage their schedule, tasks, emails, and daily life. Be concise and conversational — replies may be spoken aloud so avoid markdown symbols like asterisks or bullet dashes; use natural spoken language. IMPORTANT: ${langInstruction} When relevant, suggest actions. ${todoConnected ? 'Microsoft To Do is connected — user can add tasks by saying \'Add task: [task name]\' or \'Remind me to [task name]\'' : 'Microsoft To Do is not yet connected.'} Today's date: ${dateStr}.`;
 }
 
 // ── DOM ────────────────────────────────────────────────────────────────────
@@ -1048,8 +1101,14 @@ function startSingleLang(lang) {
     voiceStatus.classList.remove('show');
     inputEl.placeholder = 'Message your assistant…';
     if (final.trim()) {
-      if (checkVoiceCommand(final)) return; // language switch command
-      if (autoSend && apiKey) setTimeout(() => send(), 200);
+      // Clear input first so command text never gets sent
+      inputEl.value = '';
+      sendBtn.disabled = true;
+      // Check for language switch command in ALL languages (not just current)
+      if (checkVoiceCommandAllLangs(final)) return;
+      // Check for To Do voice command
+      checkTodoVoiceCommand(final).then(handled => { if (!handled) { inputEl.value = final; inputEl.dispatchEvent(new Event("input")); if (apiKey) setTimeout(() => send(), 200); } });
+      return;
     }
   };
   recognition.onerror = e => {
@@ -1143,11 +1202,12 @@ function startAutoDetect() {
   function finishAutoDetect() {
     resetMicState();
     if (bestResult && bestResult.transcript) {
+      if (checkVoiceCommandAllLangs(bestResult.transcript)) return; // language switch command
       inputEl.value = bestResult.transcript;
       inputEl.dispatchEvent(new Event('input'));
       voiceStatusText.textContent = 'Got it!';
       setTimeout(() => voiceStatus.classList.remove('show'), 800);
-      if (autoSend && apiKey) setTimeout(() => send(), 300);
+      if (apiKey) setTimeout(() => send(), 300);
     } else {
       voiceStatus.classList.remove('show');
     }
@@ -1187,6 +1247,40 @@ function addBubble(role, text, loading=false) {
 // ── Send ───────────────────────────────────────────────────────────────────
 
 // ── Voice command detection ────────────────────────────────────────────────
+// Try recognizing the audio in other languages to catch cross-language switch commands
+function tryCommandInOtherLangs(currentText, onNoCommand) {
+  const otherLangs = ['en-US', 'he-IL', 'ru-RU'].filter(l => l !== micLang);
+  let checked = 0;
+
+  // If we already have text that looks like a command attempt, try other langs
+  // Simple heuristic: short phrase (< 6 words) might be a command
+  const wordCount = currentText.trim().split(/\s+/).length;
+  if (wordCount > 6) { onNoCommand(); return; }
+
+  let commandFound = false;
+  otherLangs.forEach(lang => {
+    if (commandFound) return;
+    const r = new SR();
+    r.lang = lang;
+    r.continuous = false;
+    r.interimResults = false;
+    r.onresult = e => {
+      const t = e.results[0][0].transcript;
+      if (!commandFound && checkVoiceCommand(t)) commandFound = true;
+    };
+    r.onend = () => {
+      checked++;
+      if (checked === otherLangs.length && !commandFound) onNoCommand();
+    };
+    r.onerror = () => {
+      checked++;
+      if (checked === otherLangs.length && !commandFound) onNoCommand();
+    };
+    try { r.start(); } catch(e) { checked++; if (checked === otherLangs.length && !commandFound) onNoCommand(); }
+  });
+}
+
+
 const VOICE_COMMANDS = {
   // Switch to English
   'en-US': [
@@ -1211,17 +1305,47 @@ const VOICE_COMMANDS = {
   ]
 };
 
+// Check voice command treating text as if recognized by any language
+// This handles cross-language commands without needing new mic sessions
+function checkVoiceCommandAllLangs(text) {
+  const lower = text.toLowerCase().trim();
+
+  // Direct keyword check (works when recognizer gets it right)
+  if (checkVoiceCommand(text)) return true;
+
+  // Phonetic approximations - how each language sounds when heard by wrong recognizer
+  // Hebrew words heard by Russian recognizer
+  const hePhonetic = ['иврит', 'ивrit', 'иврите', 'еврейский', 'еврейск'];
+  // Russian words heard by Hebrew recognizer  
+  const ruPhonetic = ['רוסית', 'רוסי', 'русс', 'russi', 'russo'];
+  // Hebrew words heard by English recognizer
+  const heEnglish = ['ivrit', 'ivrit', 'hebrew'];
+  // Russian words heard by English recognizer
+  const ruEnglish = ['russian', 'russia'];
+
+  if (hePhonetic.some(w => lower.includes(w))) { switchLanguage('he-IL'); return true; }
+  if (ruPhonetic.some(w => lower.includes(w))) { switchLanguage('ru-RU'); return true; }
+  if (heEnglish.some(w => lower.includes(w))) { switchLanguage('he-IL'); return true; }
+  if (ruEnglish.some(w => lower.includes(w))) { switchLanguage('ru-RU'); return true; }
+
+  return false;
+}
+
 function checkVoiceCommand(text) {
   const lower = text.toLowerCase().trim();
-  for (const [lang, commands] of Object.entries(VOICE_COMMANDS)) {
-    for (const cmd of commands) {
-      if (lower.includes(cmd)) {
-        switchLanguage(lang);
-        return true; // command matched, don't send to Gemini
-      }
-    }
-  }
-  return false; // not a command, send to Gemini normally
+
+  // English keywords - work in any language mode
+  const enWords = ['english', 'אנגלית', 'английский', 'по английски', 'англи'];
+  // Hebrew keywords - including how they might sound when transcribed in Russian/English
+  const heWords = ['hebrew', 'עברית', 'עברי', 'иврит', 'иврите', 'ivrit', 'ivrit'];
+  // Russian keywords - including how they might sound when transcribed in Hebrew/English
+  const ruWords = ['russian', 'русск', 'руcc', 'по русски', 'на русском', 'russian', 'russia', 'רוסית', 'רוסי'];
+
+  if (enWords.some(w => lower.includes(w))) { switchLanguage('en-US'); return true; }
+  if (heWords.some(w => lower.includes(w))) { switchLanguage('he-IL'); return true; }
+  if (ruWords.some(w => lower.includes(w))) { switchLanguage('ru-RU'); return true; }
+
+  return false;
 }
 
 function switchLanguage(lang) {
@@ -1233,13 +1357,21 @@ function switchLanguage(lang) {
   const names = { 'en-US': 'English 🇺🇸', 'he-IL': 'Hebrew 🇮🇱', 'ru-RU': 'Russian 🇷🇺' };
   const name = names[lang] || lang;
 
-  // Clear input and show confirmation bubble
+  // Clear input so command text never appears in the input field
   inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.disabled = true;
   inputEl.dispatchEvent(new Event('input'));
   addBubble('ai', `Switched to ${name}! You can now speak in ${name.split(' ')[0]}.`);
 
-  // Also update TTS voice to match
+  // Update TTS voice to match
   loadVoices();
+
+  // If currently recording, restart recognition in new language
+  if (isRecording) {
+    stopRecording();
+    setTimeout(() => startRecognition(), 300);
+  }
 }
 
 function updateLangButtons() {
@@ -1568,6 +1700,346 @@ ${tasks}`;
   }
 }
 
+
+// ── Microsoft To Do Integration (Direct OAuth - no library) ───────────────
+const MS_CLIENT_ID = '3ccb25e9-7307-49be-90f6-a78d6e5e0c67';
+const MS_REDIRECT_URI = 'https://sirwilderon.github.io/my-assistant/';
+const MS_SCOPES = 'Tasks.Read Tasks.ReadWrite User.Read offline_access';
+
+let msAccessToken = null;
+let todoListId = null;
+
+// Handle OAuth redirect on page load
+window.addEventListener('load', () => {
+  // Check for token in URL hash (implicit flow response)
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const token = params.get('access_token');
+    const expiresIn = params.get('expires_in') || 3600;
+    if (token) {
+      msAccessToken = token;
+      localStorage.setItem('ms_access_token', token);
+      localStorage.setItem('ms_token_expiry', Date.now() + parseInt(expiresIn) * 1000);
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      updateTodoUI(true);
+      loadTodoTasks();
+    }
+  }
+  // Check saved token
+  const saved = localStorage.getItem('ms_access_token');
+  const expiry = localStorage.getItem('ms_token_expiry');
+  if (saved && expiry && Date.now() < parseInt(expiry)) {
+    msAccessToken = saved;
+    updateTodoUI(true);
+  }
+});
+
+async function startDeviceCodeFlow() {
+  document.getElementById('device-code-instructions').style.display = 'none';
+  document.getElementById('device-code-spinner').textContent = '⏳ Requesting code...';
+
+  try {
+    // Request device code
+    const params = new URLSearchParams({
+      client_id: MS_CLIENT_ID,
+      scope: MS_SCOPES,
+    });
+    const res = await fetch('https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+    const data = await res.json();
+
+    if (!data.device_code) {
+      showMicError('Could not get device code: ' + (data.error_description || data.error));
+      return;
+    }
+
+    // Show instructions
+    document.getElementById('device-code-section').style.display = 'none';
+    document.getElementById('device-code-instructions').style.display = 'block';
+    document.getElementById('device-code-url').href = data.verification_uri;
+    document.getElementById('device-code-url').textContent = data.verification_uri;
+    document.getElementById('device-code-value').textContent = data.user_code;
+
+    // Poll for token
+    const interval = (data.interval || 5) * 1000;
+    const expires = Date.now() + data.expires_in * 1000;
+
+    const poll = setInterval(async () => {
+      if (Date.now() > expires) {
+        clearInterval(poll);
+        document.getElementById('device-code-spinner').textContent = '❌ Code expired. Please try again.';
+        document.getElementById('device-code-section').style.display = 'block';
+        return;
+      }
+
+      try {
+        const tokenParams = new URLSearchParams({
+          client_id: MS_CLIENT_ID,
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+          device_code: data.device_code,
+        });
+        const tokenRes = await fetch('https://login.microsoftonline.com/consumers/oauth2/v2.0/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: tokenParams.toString(),
+        });
+        const tokenData = await tokenRes.json();
+
+        if (tokenData.access_token) {
+          clearInterval(poll);
+          msAccessToken = tokenData.access_token;
+          localStorage.setItem('ms_access_token', msAccessToken);
+          localStorage.setItem('ms_token_expiry', Date.now() + tokenData.expires_in * 1000);
+          if (tokenData.refresh_token) localStorage.setItem('ms_refresh_token', tokenData.refresh_token);
+          document.getElementById('device-code-instructions').style.display = 'none';
+          updateTodoUI(true);
+          loadTodoTasks();
+        } else if (tokenData.error === 'authorization_pending') {
+          document.getElementById('device-code-spinner').textContent = '⏳ Waiting for sign in...';
+        } else if (tokenData.error !== 'authorization_pending') {
+          clearInterval(poll);
+          document.getElementById('device-code-spinner').textContent = '❌ ' + (tokenData.error_description || tokenData.error);
+        }
+      } catch(e) { /* keep polling */ }
+    }, interval);
+
+  } catch(e) {
+    showMicError('Device code error: ' + e.message);
+  }
+}
+
+function signInMicrosoft() { startDeviceCodeFlow(); }
+
+async function getMsToken() {
+  const expiry = localStorage.getItem('ms_token_expiry');
+  const saved = localStorage.getItem('ms_access_token');
+  const refreshToken = localStorage.getItem('ms_refresh_token');
+
+  // Return valid token
+  if (saved && expiry && Date.now() < parseInt(expiry)) {
+    msAccessToken = saved;
+    return msAccessToken;
+  }
+
+  // Try refresh token
+  if (refreshToken) {
+    try {
+      const params = new URLSearchParams({
+        client_id: MS_CLIENT_ID,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        scope: MS_SCOPES,
+      });
+      const res = await fetch('https://login.microsoftonline.com/consumers/oauth2/v2.0/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        msAccessToken = data.access_token;
+        localStorage.setItem('ms_access_token', msAccessToken);
+        localStorage.setItem('ms_token_expiry', Date.now() + data.expires_in * 1000);
+        if (data.refresh_token) localStorage.setItem('ms_refresh_token', data.refresh_token);
+        return msAccessToken;
+      }
+    } catch(e) {}
+  }
+
+  return null;
+}
+
+function updateTodoUI(connected) {
+  document.getElementById('todo-not-connected').style.display = connected ? 'none' : 'block';
+  document.getElementById('todo-connected').style.display = connected ? 'block' : 'none';
+  const badge = document.getElementById('todo-status-badge');
+  if (connected) {
+    badge.className = 'ok';
+    badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span> Connected';
+  }
+}
+
+function openTodoPanel() {
+  document.getElementById('todo-panel').classList.add('open');
+  if (msAccessToken) { loadTodoTasks(); }
+}
+
+function closeTodoPanel() {
+  document.getElementById('todo-panel').classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const panel = document.getElementById('todo-panel');
+  if (panel) panel.addEventListener('click', e => {
+    if (e.target === panel) closeTodoPanel();
+  });
+});
+
+// ── Load tasks ─────────────────────────────────────────────────────────────
+async function loadTodoTasks() {
+  const token = await getMsToken();
+  if (!token) return;
+  const list = document.getElementById('todo-tasks-list');
+  list.innerHTML = '<div class="g-empty">Loading…</div>';
+
+  try {
+    // Get all lists
+    const listsRes = await fetch('https://graph.microsoft.com/v1.0/me/todo/lists', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const listsData = await listsRes.json();
+    const lists = listsData.value || [];
+    if (!lists.length) { list.innerHTML = '<div class="g-empty">No task lists found</div>'; return; }
+
+    // Save default list ID
+    if (!todoListId) todoListId = lists[0].id;
+
+    list.innerHTML = '';
+    for (const lst of lists) {
+      const tasksRes = await fetch(
+        `https://graph.microsoft.com/v1.0/me/todo/lists/${lst.id}/tasks?$filter=status ne 'completed'&$top=50`,
+        { headers: { Authorization: 'Bearer ' + token } }
+      );
+      const tasksData = await tasksRes.json();
+      const tasks = tasksData.value || [];
+      if (!tasks.length) continue;
+
+      // List header
+      const header = document.createElement('div');
+      header.className = 'todo-list-name';
+      header.textContent = lst.displayName + ' (' + tasks.length + ')';
+      list.appendChild(header);
+
+      tasks.forEach(task => {
+        const el = document.createElement('div');
+        el.className = 'todo-task-item';
+        const due = task.dueDateTime ? ' · ' + new Date(task.dueDateTime.dateTime).toLocaleDateString() : '';
+        const star = task.importance === 'high' ? '⭐ ' : '';
+        el.innerHTML = `
+          <div class="todo-task-check" onclick="completeTodoTask('${lst.id}','${task.id}',this)"></div>
+          <div style="flex:1;font-size:14px;color:var(--text);">${star}${task.title}<span style="font-size:11px;color:var(--muted);">${due}</span></div>`;
+        list.appendChild(el);
+      });
+    }
+  } catch(e) {
+    list.innerHTML = '<div class="g-empty">Error loading tasks: ' + e.message + '</div>';
+  }
+}
+
+// ── Add task ───────────────────────────────────────────────────────────────
+async function addTodoTask(title, listName = null, dueDate = null) {
+  const token = await getMsToken();
+  if (!token) {
+    addBubble('ai', '⚠️ Microsoft To Do is not connected. Tap the 📋 To Do button to sign in.');
+    return false;
+  }
+
+  try {
+    // Find list by name or use default
+    let targetListId = todoListId;
+    if (listName) {
+      const listsRes = await fetch('https://graph.microsoft.com/v1.0/me/todo/lists', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const listsData = await listsRes.json();
+      const found = (listsData.value || []).find(l =>
+        l.displayName.toLowerCase().includes(listName.toLowerCase())
+      );
+      if (found) targetListId = found.id;
+    }
+
+    if (!targetListId) {
+      // Load lists to get default
+      const listsRes = await fetch('https://graph.microsoft.com/v1.0/me/todo/lists', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const listsData = await listsRes.json();
+      targetListId = listsData.value?.[0]?.id;
+      todoListId = targetListId;
+    }
+
+    const body = { title };
+    if (dueDate) body.dueDateTime = { dateTime: new Date(dueDate).toISOString(), timeZone: 'UTC' };
+
+    const addRes = await fetch(`https://graph.microsoft.com/v1.0/me/todo/lists/${targetListId}/tasks`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const addData = await addRes.json();
+    // Find list name for confirmation
+    const listsRes2 = await fetch('https://graph.microsoft.com/v1.0/me/todo/lists/' + targetListId, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const listInfo = await listsRes2.json();
+    return listInfo.displayName || 'Tasks';
+  } catch(e) {
+    console.error('Add task error:', e);
+    return false;
+  }
+}
+
+async function addTodoTaskFromInput() {
+  const input = document.getElementById('todo-add-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const listName = await addTodoTask(text);
+  if (listName) { loadTodoTasks(); }
+}
+
+async function completeTodoTask(listId, taskId, el) {
+  const token = await getMsToken();
+  if (!token) return;
+  el.classList.add('done');
+  try {
+    await fetch(`https://graph.microsoft.com/v1.0/me/todo/lists/${listId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'completed' })
+    });
+    setTimeout(() => el.closest('.todo-task-item').remove(), 600);
+  } catch(e) { el.classList.remove('done'); }
+}
+
+// ── Voice command detection for adding tasks ───────────────────────────────
+async function checkTodoVoiceCommand(text) {
+  const lower = text.toLowerCase().trim();
+
+  // Patterns - flexible, no colon required
+  const patterns = [
+    /^(?:add task|new task|add to do|add todo)[:\s]+(.+)/i,
+    /^(?:add task|new task|add to do|add todo)\s+(.+)/i,
+    /^(?:remind me to|reminder to|reminder)[:\s]+(.+)/i,
+    /^(?:remind me to|reminder to|reminder)\s+(.+)/i,
+    /^(?:task)[:\s]+(.+)/i,
+    /^(?:הוסף משימה|משימה חדשה)[:\s]+(.+)/i,
+    /^(?:הוסף משימה|משימה חדשה)\s+(.+)/i,
+    /^(?:добавь задачу|новая задача)[:\s]+(.+)/i,
+    /^(?:добавь задачу|новая задача)\s+(.+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const taskTitle = match[1].trim();
+      const listName = await addTodoTask(taskTitle);
+      if (listName) {
+        addBubble('ai', '✅ Added to To Do list "' + listName + '": "' + taskTitle + '"');
+      } else {
+        addBubble('ai', '⚠️ Microsoft To Do token expired. Tap 📋TD → Connect Microsoft To Do to reconnect.');
+      }
+      return true; // Always return true so Gemini does not handle it
+    }
+  }
+  return false;
+}
+
 // Scroll to bottom on resize (keyboard open/close)
 window.addEventListener('resize', () => {
   messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -1671,6 +2143,54 @@ window.addEventListener('resize', () => {
 
       <button onclick="closeGooglePanel(); injectGoogleContext();" style="width:100%;margin-top:16px;" class="btn primary">
         💬 Ask assistant about my schedule
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Microsoft To Do Panel -->
+<div id="todo-panel">
+  <div id="todo-sheet">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="sheet-title">Microsoft To Do</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="todo-status-badge"></span>
+        <button onclick="closeTodoPanel()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+      </div>
+    </div>
+
+    <div id="todo-not-connected" style="text-align:center;padding:20px 0;">
+      <div style="font-size:40px;margin-bottom:12px;">📋</div>
+      <div style="font-size:15px;margin-bottom:8px;">Connect Microsoft To Do</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Sign in to view and add tasks by voice</div>
+      <div id="device-code-section">
+        <button ontouchstart="event.preventDefault();startDeviceCodeFlow();" onclick="startDeviceCodeFlow()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;border-radius:12px;border:1px solid rgba(0,120,212,0.3);background:rgba(0,120,212,0.1);color:#2b88d8;font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer;margin-top:8px;">
+          <svg width="20" height="20" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          Connect Microsoft To Do
+        </button>
+      </div>
+      <div id="device-code-instructions" style="display:none;margin-top:12px;padding:14px;background:var(--surface2);border-radius:12px;border:1px solid var(--border2);">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">1. Open this link in your browser:</div>
+        <a id="device-code-url" href="" target="_blank" style="color:var(--accent);font-size:14px;word-break:break-all;"></a>
+        <div style="font-size:13px;color:var(--muted);margin:10px 0 6px;">2. Enter this code:</div>
+        <div id="device-code-value" style="font-size:24px;font-weight:700;letter-spacing:4px;color:var(--text);text-align:center;padding:8px;background:var(--bg);border-radius:8px;"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center;">Waiting for you to sign in...</div>
+        <div id="device-code-spinner" style="text-align:center;margin-top:8px;color:var(--muted);font-size:13px;">⏳ Checking...</div>
+      </div>
+    </div>
+
+    <div id="todo-connected" style="display:none;">
+      <!-- Add task input -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="todo-add-input" class="g-add-input" placeholder="Add a task..." style="flex:1;"
+          onkeydown="if(event.key==='Enter') addTodoTaskFromInput()">
+        <button class="btn primary" ontouchstart="event.preventDefault();addTodoTaskFromInput();" onclick="addTodoTaskFromInput()">Add</button>
+      </div>
+      <div id="todo-tasks-list"><div class="g-empty">Loading tasks…</div></div>
+      <button onclick="closeTodoPanel();" style="width:100%;margin-top:16px;" class="btn primary">
+        💬 Ask assistant about my tasks
       </button>
     </div>
   </div>
