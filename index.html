@@ -1404,6 +1404,7 @@ async function send() {
     inputEl.value = '';
     inputEl.style.height = 'auto';
     sendBtn.disabled = true;
+    alert('Starting device code flow...');
     startDeviceCodeFlow();
     return;
   }
