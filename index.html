@@ -1111,6 +1111,11 @@ function startSingleLang(lang) {
       sendBtn.disabled = true;
       // Check for language switch command in ALL languages (not just current)
       if (checkVoiceCommandAllLangs(final)) return;
+      // Check for connect todo voice command
+      if (final.toLowerCase().includes('connect todo') || final.toLowerCase().includes('connect microsoft')) {
+        startDeviceCodeFlow();
+        return;
+      }
       // Check for To Do voice command
       checkTodoVoiceCommand(final).then(handled => { if (!handled) { inputEl.value = final; inputEl.dispatchEvent(new Event("input")); if (apiKey) setTimeout(() => send(), 200); } });
       return;
