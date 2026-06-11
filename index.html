@@ -771,6 +771,11 @@
 </div>
 
 <script>
+// Microsoft To Do constants - defined early so always available
+const MS_CLIENT_ID = '3ccb25e9-7307-49be-90f6-a78d6e5e0c67';
+const MS_REDIRECT_URI = 'https://sirwilderon.github.io/my-assistant/';
+const MS_SCOPES = 'Tasks.Read Tasks.ReadWrite User.Read offline_access';
+
 // Global connect handler - defined first so button can always find it
 function handleConnect() {
   var k = document.getElementById('api-key-input').value.trim();
@@ -1701,10 +1706,7 @@ ${tasks}`;
 }
 
 
-// ── Microsoft To Do Integration (Direct OAuth - no library) ───────────────
-const MS_CLIENT_ID = '3ccb25e9-7307-49be-90f6-a78d6e5e0c67';
-const MS_REDIRECT_URI = 'https://sirwilderon.github.io/my-assistant/';
-const MS_SCOPES = 'Tasks.Read Tasks.ReadWrite User.Read offline_access';
+
 
 let msAccessToken = null;
 let todoListId = null;
