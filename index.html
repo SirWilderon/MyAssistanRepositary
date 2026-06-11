@@ -1393,7 +1393,16 @@ function updateLangButtons() {
 
 async function send() {
   const text = inputEl.value.trim();
-  if (!text || !apiKey) return;
+  if (!text) return;
+  // Handle connect todo command without needing API key
+  if (text.toLowerCase().includes('connect todo') || text.toLowerCase().includes('connect microsoft')) {
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    sendBtn.disabled = true;
+    startDeviceCodeFlow();
+    return;
+  }
+  if (!apiKey) return;
   inputEl.value=''; inputEl.style.height='auto'; sendBtn.disabled=true;
   stopSpeaking();
   addBubble('user', text);
