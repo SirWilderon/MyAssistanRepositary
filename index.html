@@ -894,6 +894,7 @@ inputEl.addEventListener('input', () => {
 });
 inputEl.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
 sendBtn.addEventListener('click', send);
+sendBtn.addEventListener('touchstart', function(e) { e.preventDefault(); send(); });
 
 function fillInput(text) {
   inputEl.value = text;
